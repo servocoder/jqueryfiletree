@@ -45,13 +45,15 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
       this.data = {};
       $el.html('<ul class="jqueryFileTree start"><li class="wait">' + this.options.loadMessage + '<li></ul>');
       _this.showTree($el, escape(this.options.root), function() {
-        return _this._trigger('filetreeinitiated', {});
+        return _this._trigger('filetreeinitiated', {
+          options: _this.options
+        });
       });
       $el.delegate("li a", this.options.folderEvent, _this.onEvent);
     }
 
     FileTree.prototype.onEvent = function(event) {
-      var $ev, _this, callback, jqft, options, ref;
+      var $ev, _this, callback, jqft, options, ref, prevent;
       $ev = $(event.target);
       options = this.options;
       jqft = this.jqft;
@@ -65,11 +67,16 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
       _this.data.value = $ev.text();
       _this.data.rel = $ev.prop('rel');
       _this.data.container = jqft.container;
+      _this.data.options = _this.options;
+      prevent = _this._trigger('filetreeclick', _this.data);
+      if(prevent === true) {
+        return false;
+      }
       if ($ev.parent().hasClass('directory')) {
         if ($ev.parent().hasClass('collapsed')) {
           if (!options.multiFolder) {
             $ev.parent().parent().find('UL').slideUp({
-              speed: options.collapseSpeed,
+              duration: options.collapseSpeed,
               easing: options.collapseEasing
             });
             $ev.parent().parent().find('LI.directory').removeClass('expanded').addClass('collapsed');
@@ -82,7 +89,7 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
           });
         } else {
           return $ev.parent().find('UL').slideUp({
-            speed: options.collapseSpeed,
+            duration: options.collapseSpeed,
             easing: options.collapseEasing,
             start: function() {
               return _this._trigger('filetreecollapse', _this.data);
@@ -130,14 +137,15 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
         $el.find('.start').html('');
         $el.removeClass('wait').append(result);
         if (options.root === dir) {
-          $el.find('UL:hidden').show(typeof callback !== "undefined" && callback !== null);
+          $el.find('UL:hidden').show();
+          finishCallback();
         } else {
           if (jQuery.easing[options.expandEasing] === void 0) {
             console.log('Easing library not loaded. Include jQueryUI or 3rd party lib.');
             options.expandEasing = 'swing';
           }
           $el.find('UL:hidden').slideDown({
-            speed: options.expandSpeed,
+            duration: options.expandSpeed,
             easing: options.expandEasing,
             start: function() {
               return _this._trigger('filetreeexpand', _this.data);
@@ -156,7 +164,12 @@ var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); 
       };
       handleFail = function() {
         $el.find('.start').html('');
-        $el.removeClass('wait').append("<p>" + options.errorMessage + "</p>");
+        $el.removeClass('wait');
+        if(options.errorMessage) {
+          $el.append("<p>" + options.errorMessage + "</p>");
+        } else {
+          $el.removeClass('expanded').addClass('collapsed');
+        }
         return false;
       };
       if (typeof options.script === 'function') {

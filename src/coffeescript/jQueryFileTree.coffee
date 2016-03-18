@@ -74,7 +74,7 @@ do($ = window.jQuery, window) ->
                     # Expand
                     if !options.multiFolder
                         $ev.parent().parent().find('UL').slideUp { 
-                            speed: options.collapseSpeed, 
+                            duration: options.collapseSpeed, 
                             easing: options.collapseEasing
                         }
                         $ev.parent().parent().find('LI.directory').removeClass('expanded').addClass('collapsed')
@@ -88,7 +88,7 @@ do($ = window.jQuery, window) ->
                 else
                     # Collapse
                     $ev.parent().find('UL').slideUp {
-                        speed: options.collapseSpeed, 
+                        duration: options.collapseSpeed, 
                         easing: options.collapseEasing, 
                         start: ->
                             _this._trigger('filetreecollapse', _this.data)
@@ -137,14 +137,15 @@ do($ = window.jQuery, window) ->
                 $el.find('.start').html('')
                 $el.removeClass('wait').append( result )
                 if options.root == dir
-                    $el.find('UL:hidden').show( callback? )
+                    $el.find('UL:hidden').show( )
+                    finishCallback()
                 else
                     # ensure an easing library is loaded if custom easing is used
                     if jQuery.easing[options.expandEasing] == undefined
                         console.log 'Easing library not loaded. Include jQueryUI or 3rd party lib.'
                         options.expandEasing = 'swing' # revert to swing (default)
                     $el.find('UL:hidden').slideDown {
-                        speed: options.expandSpeed,
+                        duration: options.expandSpeed,
                         easing: options.expandEasing,
                         start: ->
                             _this._trigger('filetreeexpand', _this.data)
